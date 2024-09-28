@@ -1,6 +1,6 @@
-# (TODO: your game's title)
+# waddlewaddle
 
-Author: (TODO: your name)
+Author: Sarah Di (sarahdi)
 
 Design: (TODO: In two sentences or fewer, describe what is new and interesting about your game.)
 
