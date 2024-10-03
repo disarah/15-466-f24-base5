@@ -136,8 +136,8 @@ for obj in bpy.data.objects:
 	bpy.ops.mesh.quads_convert_to_tris(quad_method='BEAUTY', ngon_method='BEAUTY')
 	bpy.ops.object.mode_set(mode='OBJECT')
 
-	#compute normals (respecting face smoothing):
-	mesh.calc_normals_split()
+	#compute normals (respecting face smoothing): (function removed in recent blender, so check before calling)
+	if 'calc_normals_split' in dir(mesh): mesh.calc_normals_split()
 
 	#store the beginning indices:
 	vertex_begin = position_count
