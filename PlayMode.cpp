@@ -143,7 +143,7 @@ PlayMode::PlayMode() : scene(*phonebank_scene) {
 	player.camera->transform->parent = player.transform;
 
 	//player's eyes are 1.8 units above the ground:
-	player.camera->transform->position = glm::vec3(0.0f, 0.0f, 0.5f);
+	player.camera->transform->position = glm::vec3(0.0f, 0.0f, 0.8f);
 
 	//rotate camera facing direction (-z) to player facing direction (+y):
 	player.camera->transform->rotation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -387,23 +387,24 @@ void PlayMode::update(float elapsed) {
 			if(trigger){
 				if(!one.pressed && two.pressed && !three.pressed) ranswer = true;
 				else if (one.pressed || three.pressed) wrongAnswer = true;
-				if(ranswer) bottomText = "NIIIIIIIIIICE.";
-				else if (wrongAnswer) bottomText = "That doesn't sound right...";
+				if (wrongAnswer) bottomText = "That doesn't sound right...";
 				else bottomText = "Well? [1] 5 [2] 7 [3] 9";
 			} else {
 				bottomText = "Tell me how many brown mushrooms are out there... [F]"; // 7
 			}
+			if(ranswer) bottomText = "NIIIIIIIIIICE.";
 		} else if (duckCollide) {
 			if(cont.pressed) trigger = true;
 			if(trigger){
 				if(one.pressed && !two.pressed && !three.pressed) danswer = true;
 				else if (two.pressed || three.pressed) wrongAnswer = true;
-				if(danswer) bottomText = "Oh geez. Invasive species amirite?";
-				else if (wrongAnswer) bottomText = "That doesn't sound right...";
+			
+				if (wrongAnswer) bottomText = "That doesn't sound right...";
 				else bottomText = "Well? [1] 9 [2] 4 [3] 8";
 			} else {
 				bottomText = "Tell me how many red mushrooms are out there... [F]"; // 9
 			}
+			if(danswer) bottomText = "Oh geez. Invasive species amirite?";
 		} else {
 			trigger = false;
 			wrongAnswer = false;
