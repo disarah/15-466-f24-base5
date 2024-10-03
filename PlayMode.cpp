@@ -179,6 +179,22 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			down.downs += 1;
 			down.pressed = true;
 			return true;
+		} else if (evt.key.keysym.sym == SDLK_f) {
+			cont.downs += 1;
+			cont.pressed = true;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_1) {
+			one.downs += 1;
+			one.pressed = true;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_2) {
+			two.downs += 1;
+			two.pressed = true;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_3) {
+			three.downs += 1;
+			three.pressed = true;
+			return true;
 		}
 	} else if (evt.type == SDL_KEYUP) {
 		if (evt.key.keysym.sym == SDLK_a) {
@@ -192,6 +208,18 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			return true;
 		} else if (evt.key.keysym.sym == SDLK_s) {
 			down.pressed = false;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_f) {
+			cont.pressed = false;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_1) {
+			one.pressed = false;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_2) {
+			two.pressed = false;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_3) {
+			three.pressed = false;
 			return true;
 		}
 	} else if (evt.type == SDL_MOUSEBUTTONDOWN) {
@@ -331,41 +359,68 @@ void PlayMode::update(float elapsed) {
 		5.0f, 0.0f, 0.0f, 1.0f
 	);
 
+	{
+		// check if player is near duck/raccoon
+		// https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection
+		// barely a bbox, more like a bsquare
+
+		float mminX = player.transform->position.x - obj_bbox.x;
+		float mmaxX = player.transform->position.x + obj_bbox.x;
+		float mminY = player.transform->position.y - obj_bbox.y;
+		float mmaxY = player.transform->position.y + obj_bbox.y;
+		
+		float rminX = raccoon->position.x - obj_bbox.x;
+		float rmaxX = raccoon->position.x + obj_bbox.x;
+		float rminY = raccoon->position.y - obj_bbox.y;
+		float rmaxY = raccoon->position.y + obj_bbox.y;
+
+		float dminX = duck->position.x - obj_bbox.x;
+		float dmaxX = duck->position.x + obj_bbox.x;
+		float dminY = duck->position.y - obj_bbox.y;
+		float dmaxY = duck->position.y + obj_bbox.y;
+
+		bool raccoonCollide = (mminX <= rmaxX && mmaxX >= rminX && mminY <= rmaxY && mmaxY >= rminY);
+		bool duckCollide = (mminX <= dmaxX && mmaxX >= dminX && mminY <= dmaxY && mmaxY >= dminY);
+		
+		if(raccoonCollide) {
+			if(cont.pressed) trigger = true;
+			if(trigger){
+				if(!one.pressed && two.pressed && !three.pressed) ranswer = true;
+				else if (one.pressed || three.pressed) wrongAnswer = true;
+				if(ranswer) bottomText = "NIIIIIIIIIICE.";
+				else if (wrongAnswer) bottomText = "That doesn't sound right...";
+				else bottomText = "Well? [1] 5 [2] 7 [3] 9";
+			} else {
+				bottomText = "Tell me how many brown mushrooms are out there... [F]"; // 7
+			}
+		} else if (duckCollide) {
+			if(cont.pressed) trigger = true;
+			if(trigger){
+				if(one.pressed && !two.pressed && !three.pressed) danswer = true;
+				else if (two.pressed || three.pressed) wrongAnswer = true;
+				if(danswer) bottomText = "Oh geez. Invasive species amirite?";
+				else if (wrongAnswer) bottomText = "That doesn't sound right...";
+				else bottomText = "Well? [1] 9 [2] 4 [3] 8";
+			} else {
+				bottomText = "Tell me how many red mushrooms are out there... [F]"; // 9
+			}
+		} else {
+			trigger = false;
+			wrongAnswer = false;
+			bottomText = "Mouse motion looks; WASD moves; escape ungrabs mouse";
+		}
+	}
+
+	
 	//reset button press counters:
 	left.downs = 0;
 	right.downs = 0;
 	up.downs = 0;
 	down.downs = 0;
-
-	// check if raccoon collides with any mushrooms
-	// https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection
-	// barely a bbox, more like a bsquare
-
-	float mminX = player.transform->position.x - obj_bbox.x;
-	float mmaxX = player.transform->position.x + obj_bbox.x;
-	float mminY = player.transform->position.y - obj_bbox.y;
-	float mmaxY = player.transform->position.y + obj_bbox.y;
-	
-	float rminX = raccoon->position.x - obj_bbox.x;
-	float rmaxX = raccoon->position.x + obj_bbox.x;
-	float rminY = raccoon->position.y - obj_bbox.y;
-	float rmaxY = raccoon->position.y + obj_bbox.y;
-
-	float dminX = duck->position.x - obj_bbox.x;
-	float dmaxX = duck->position.x + obj_bbox.x;
-	float dminY = duck->position.y - obj_bbox.y;
-	float dmaxY = duck->position.y + obj_bbox.y;
-
-	bool raccoonCollide = (mminX <= rmaxX && mmaxX >= rminX && mminY <= rmaxY && mmaxY >= rminY);
-	bool duckCollide = (mminX <= dmaxX && mmaxX >= dminX && mminY <= dmaxY && mmaxY >= dminY);
-	
-	if(raccoonCollide) {
-		bottomText = "Tell me how many red mushrooms are out there...";
-	} else if (duckCollide) {
-		bottomText = "Tell me how many brown mushrooms are out there...";
-	} else {
-		bottomText = "Mouse motion looks; WASD moves; escape ungrabs mouse";
-	}
+	cont.downs = 0;
+	one.downs = 0;
+	two.downs = 0;
+	three.downs = 0;
 	
 }
 

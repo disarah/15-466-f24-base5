@@ -42,7 +42,7 @@ struct PlayMode : Mode {
 	struct Button {
 		uint8_t downs = 0;
 		uint8_t pressed = 0;
-	} left, right, down, up;
+	} left, right, down, up, cont, one, two, three;
 
 	//local copy of the game scene (so code can change it during gameplay):
 	Scene scene;
@@ -69,6 +69,10 @@ struct PlayMode : Mode {
 	unsigned int const font_height = 800;
 
 	std::string bottomText;
+	bool trigger = false;
+	bool ranswer = false;
+	bool wrongAnswer = false;
+	bool danswer = false;
 
 	glm::vec2 obj_bbox;
 
