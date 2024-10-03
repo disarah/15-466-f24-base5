@@ -2,7 +2,7 @@
 
 Author: Sarah Di (sarahdi)
 
-Design: (TODO: In two sentences or fewer, describe what is new and interesting about your game.)
+Design: My game is about counting the number of mushrooms for the duck and raccoon. 
 
 Screen Shot:
 
@@ -10,9 +10,9 @@ Screen Shot:
 
 How To Play:
 
-(TODO: describe the controls and (if needed) goals/strategy.)
+WASD to move around. Use mouse to control camera orientation. Escape to ungrab mouse.
 
-Sources: (TODO: list a source URL for any assets you did not create yourself. Make sure you have a license for the asset.)
+Sources: I made all assets myself. I also composed the music myself.
 
 This game was built with [NEST](NEST.md).
 
