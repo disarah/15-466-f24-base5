@@ -12,7 +12,7 @@ How To Play:
 
 WASD to move around. Use mouse to control camera orientation. Escape to ungrab mouse.
 
-(F, 1, 2, 3 buttons are used to interact with the raccoon and duck)
+(F, 1, 2, 3 buttons are used to interact with the animals)
 
 Sources: I made all assets myself. I also composed the music myself. The Font I used is Sixtyfour Convergence by Simon Cozens, Jens Kutílek; It is licensed under the Open Font License and I got the font from Google Fonts (however it doesn't show up on the screen right now due to a bug, so I use the DrawLines code).
 
