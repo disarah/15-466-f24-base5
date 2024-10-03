@@ -1,5 +1,6 @@
 #include "Mode.hpp"
 
+#include "Sound.hpp"
 #include "Scene.hpp"
 #include "WalkMesh.hpp"
 
@@ -27,6 +28,8 @@ struct PlayMode : Mode {
 
 	//local copy of the game scene (so code can change it during gameplay):
 	Scene scene;
+	
+	std::shared_ptr< Sound::PlayingSample > music_loop;
 
 	//player info:
 	struct Player {
