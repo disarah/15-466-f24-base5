@@ -2,7 +2,7 @@
 
 Author: Sarah Di (sarahdi)
 
-Design: My game is about counting the number of mushrooms for the duck and raccoon. You walk around the scene and try to find all of the mushrooms hidden around.
+Design: My game is about counting the number of mushrooms for the duck and raccoon. You walk around the scene and try to find all of the mushrooms hidden around. There are some bully swans watching you though.
 
 Screen Shot:
 
