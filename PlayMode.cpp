@@ -1,6 +1,7 @@
 #include "PlayMode.hpp"
 
 #include "LitColorTextureProgram.hpp"
+#include "TextureProgram.hpp"
 
 #include "DrawLines.hpp"
 #include "Mesh.hpp"
@@ -49,6 +50,84 @@ Load< WalkMeshes > phonebank_walkmeshes(LoadTagDefault, []() -> WalkMeshes const
 });
 
 PlayMode::PlayMode() : scene(*phonebank_scene) {
+	for (auto &transform : scene.transforms) {
+		if (transform.name == "Raccoon") raccoon = &transform;
+		else if (transform.name == "Duck") duck = &transform;
+	}
+
+	if (raccoon == nullptr) throw std::runtime_error("Raccoon not found.");
+	else if (duck == nullptr) throw std::runtime_error("Duck not found.");
+
+	raccoon_rotation = raccoon->rotation;
+	duck_rotation = duck->rotation;
+
+	Text text1(newline + "You are a Raccoon                                                                                     Press enter to Start",
+				script_line_length,
+				script_line_height
+				);
+
+	texts.push_back(text1);
+
+	{ //set up vertex array and buffers:
+		glGenVertexArrays(1, &tex_example.vao);
+		glGenBuffers(1, &tex_example.vbo);
+
+		glBindVertexArray(tex_example.vao);
+		glBindBuffer(GL_ARRAY_BUFFER, tex_example.vbo);
+
+		glEnableVertexAttribArray( texture_program->Position_vec4 );
+		glVertexAttribPointer( texture_program->Position_vec4, 3, GL_FLOAT, GL_FALSE, sizeof(PosTexVertex), (GLbyte *)0 + offsetof(PosTexVertex, Position) );
+
+		glEnableVertexAttribArray( texture_program->TexCoord_vec2 );
+		glVertexAttribPointer( texture_program->TexCoord_vec2, 2, GL_FLOAT, GL_FALSE, sizeof(PosTexVertex), (GLbyte *)0 + offsetof(PosTexVertex, TexCoord) );
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+	}
+	GL_ERRORS();
+
+	{ //---------- texture example generate some vertices ----------
+		std::vector< PosTexVertex > verts;
+
+		verts.emplace_back(PosTexVertex{
+			.Position = glm::vec3(-0.5f, -0.8f, 0.0f),
+			.TexCoord = glm::vec2(0.0f, 0.0f),
+		});
+		verts.emplace_back(PosTexVertex{
+			.Position = glm::vec3(-0.5f, 0.7f, 0.0f),
+			.TexCoord = glm::vec2(0.0f, 1.0f),
+		});
+		verts.emplace_back(PosTexVertex{
+			.Position = glm::vec3(1.5f, -0.8f, 0.0f),
+			.TexCoord = glm::vec2(1.0f, 0.0f),
+		});
+		verts.emplace_back(PosTexVertex{
+			.Position = glm::vec3(1.5f, 0.7f, 0.0f),
+			.TexCoord = glm::vec2(1.0f, 1.0f),
+		});
+
+		glBindBuffer(GL_ARRAY_BUFFER, tex_example.vbo);
+		glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(verts[0]), verts.data(), GL_STREAM_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		tex_example.count = verts.size();
+
+		GL_ERRORS();
+
+		//identity transform (just drawing "on the screen"):
+		// slight scaling to make text smaller
+		tex_example.CLIP_FROM_LOCAL = glm::mat4(
+			0.8f, 0.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f,
+			0.05f, 0.0f, 0.0f, 1.0f
+		);
+	}
+
+	TextFont = std::make_shared<Font> (data_path("Sixtyfour_Convergence/SixtyfourConvergence-Regular.ttf"), font_size, font_width, font_height);
+	TextFont->gen_texture(tex_example.tex, texts);
+
+	bottomText = "Mouse motion looks; WASD moves; escape ungrabs mouse";
+
 	//create a player transform:
 	scene.transforms.emplace_back();
 	player.transform = &scene.transforms.back();
@@ -142,6 +221,24 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 }
 
 void PlayMode::update(float elapsed) {
+	// wobble raccoon
+	{
+		//slowly rotates through [0,1):
+		wobble += elapsed / 10.0f;
+		wobble -= std::floor(wobble);
+
+		raccoon->rotation = raccoon_rotation * glm::angleAxis(
+			glm::radians(5.0f * std::sin(wobble * 2.0f * float(M_PI))),
+			glm::vec3(0.0f, 1.0f, 0.0f)
+		);
+		duck->rotation = duck_rotation * glm::angleAxis(
+			glm::radians(5.0f * std::sin(wobble * 2.0f * float(M_PI))),
+			glm::vec3(0.0f, 1.0f, 0.0f)
+		);
+	}
+
+	bottomText = "Mouse motion looks; WASD moves; escape ungrabs mouse";
+	
 	//player walking:
 	{
 		//combine inputs into a move:
@@ -227,6 +324,13 @@ void PlayMode::update(float elapsed) {
 		*/
 	}
 
+	tex_example.CLIP_FROM_LOCAL = player.camera->make_projection() * glm::mat4(player.camera->transform->make_world_to_local()) * glm::mat4(
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		5.0f, 0.0f, 0.0f, 1.0f
+	);
+
 	//reset button press counters:
 	left.downs = 0;
 	right.downs = 0;
@@ -267,6 +371,29 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	}
 	*/
 
+	{ //texture example drawing
+		glEnable(GL_BLEND);
+		glBlendEquation(GL_FUNC_ADD);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		glUseProgram(texture_program->program);
+		glBindVertexArray(tex_example.vao);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, tex_example.tex);
+
+		glUniformMatrix4fv( texture_program->CLIP_FROM_LOCAL_mat4, 1, GL_FALSE, glm::value_ptr(tex_example.CLIP_FROM_LOCAL) );
+
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, tex_example.count);
+
+		glBindVertexArray(0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glUseProgram(0);
+
+		glDisable(GL_BLEND);
+		
+	}
+	GL_ERRORS();
+
 	{ //use DrawLines to overlay some text:
 		glDisable(GL_DEPTH_TEST);
 		float aspect = float(drawable_size.x) / float(drawable_size.y);
@@ -278,15 +405,15 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		));
 
 		constexpr float H = 0.09f;
-		lines.draw_text("Mouse motion looks; WASD moves; escape ungrabs mouse",
+		lines.draw_text(bottomText,
 			glm::vec3(-aspect + 0.1f * H, -1.0 + 0.1f * H, 0.0),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			glm::u8vec4(0x00, 0x00, 0x00, 0x00));
 		float ofs = 2.0f / drawable_size.y;
-		lines.draw_text("Mouse motion looks; WASD moves; escape ungrabs mouse",
+		lines.draw_text(bottomText,
 			glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + + 0.1f * H + ofs, 0.0),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-			glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+			glm::u8vec4(0x00, 0x00, 0xff, 0x00));
 	}
 	GL_ERRORS();
 }
