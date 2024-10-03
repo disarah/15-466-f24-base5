@@ -70,6 +70,8 @@ struct PlayMode : Mode {
 
 	std::string bottomText;
 
+	glm::vec2 obj_bbox;
+
 	//player info:
 	struct Player {
 		WalkPoint at;

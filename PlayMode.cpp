@@ -61,6 +61,8 @@ PlayMode::PlayMode() : scene(*phonebank_scene) {
 	raccoon_rotation = raccoon->rotation;
 	duck_rotation = duck->rotation;
 
+	obj_bbox = glm::vec2(0.5f);
+
 	Text text1(newline + "You are a Raccoon                                                                                     Press enter to Start",
 				script_line_length,
 				script_line_height
@@ -236,8 +238,6 @@ void PlayMode::update(float elapsed) {
 			glm::vec3(0.0f, 1.0f, 0.0f)
 		);
 	}
-
-	bottomText = "Mouse motion looks; WASD moves; escape ungrabs mouse";
 	
 	//player walking:
 	{
@@ -336,6 +336,37 @@ void PlayMode::update(float elapsed) {
 	right.downs = 0;
 	up.downs = 0;
 	down.downs = 0;
+
+	// check if raccoon collides with any mushrooms
+	// https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection
+	// barely a bbox, more like a bsquare
+
+	float mminX = player.transform->position.x - obj_bbox.x;
+	float mmaxX = player.transform->position.x + obj_bbox.x;
+	float mminY = player.transform->position.y - obj_bbox.y;
+	float mmaxY = player.transform->position.y + obj_bbox.y;
+	
+	float rminX = raccoon->position.x - obj_bbox.x;
+	float rmaxX = raccoon->position.x + obj_bbox.x;
+	float rminY = raccoon->position.y - obj_bbox.y;
+	float rmaxY = raccoon->position.y + obj_bbox.y;
+
+	float dminX = duck->position.x - obj_bbox.x;
+	float dmaxX = duck->position.x + obj_bbox.x;
+	float dminY = duck->position.y - obj_bbox.y;
+	float dmaxY = duck->position.y + obj_bbox.y;
+
+	bool raccoonCollide = (mminX <= rmaxX && mmaxX >= rminX && mminY <= rmaxY && mmaxY >= rminY);
+	bool duckCollide = (mminX <= dmaxX && mmaxX >= dminX && mminY <= dmaxY && mmaxY >= dminY);
+	
+	if(raccoonCollide) {
+		bottomText = "Tell me how many red mushrooms are out there...";
+	} else if (duckCollide) {
+		bottomText = "Tell me how many brown mushrooms are out there...";
+	} else {
+		bottomText = "Mouse motion looks; WASD moves; escape ungrabs mouse";
+	}
+	
 }
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
