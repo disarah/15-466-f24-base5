@@ -53,15 +53,19 @@ PlayMode::PlayMode() : scene(*phonebank_scene) {
 	for (auto &transform : scene.transforms) {
 		if (transform.name == "Raccoon") raccoon = &transform;
 		else if (transform.name == "Duck") duck = &transform;
+		else if (transform.name == "Swan.012") swan = &transform;
 	}
 
 	if (raccoon == nullptr) throw std::runtime_error("Raccoon not found.");
 	else if (duck == nullptr) throw std::runtime_error("Duck not found.");
+	else if (swan == nullptr) throw std::runtime_error("Swan not found.");
 
 	raccoon_rotation = raccoon->rotation;
 	duck_rotation = duck->rotation;
 
 	obj_bbox = glm::vec2(0.5f);
+
+	swan_bbox = glm::vec2(10.f);
 
 	Text text1(newline + "You are a Raccoon                                                                                     Press enter to Start",
 				script_line_length,
@@ -379,15 +383,32 @@ void PlayMode::update(float elapsed) {
 		float dminY = duck->position.y - obj_bbox.y;
 		float dmaxY = duck->position.y + obj_bbox.y;
 
+		float sminX = swan->position.x - swan_bbox.x;
+		float smaxX = swan->position.x + swan_bbox.x;
+		float sminY = swan->position.y - swan_bbox.y;
+		float smaxY = swan->position.y + swan_bbox.y;
+
 		bool raccoonCollide = (mminX <= rmaxX && mmaxX >= rminX && mminY <= rmaxY && mmaxY >= rminY);
 		bool duckCollide = (mminX <= dmaxX && mmaxX >= dminX && mminY <= dmaxY && mmaxY >= dminY);
+		bool swanCollide = (mminX <= smaxX && mmaxX >= sminX && mminY <= smaxY && mmaxY >= sminY);
 		
-		if(raccoonCollide) {
+		if(swanCollide){
 			if(cont.pressed) trigger = true;
 			if(trigger){
-				if(!one.pressed && two.pressed && !three.pressed) ranswer = true;
-				else if (one.pressed || three.pressed) wrongAnswer = true;
-				if (wrongAnswer) bottomText = "That doesn't sound right...";
+				bottomText = "Counting mushrooms huh...NERD. HONK HONK HONK HAHAHAHAHAHAHAHAHA";
+				swantalk = true;
+			} else {
+				bottomText = "LOL what a scrub HA! Whatcha doin? [F]";
+			}
+		} else if(raccoonCollide) {
+			if(cont.pressed) trigger = true;
+			if(trigger){
+				if(swantalk){
+					if(!one.pressed && two.pressed && !three.pressed) ranswer = true;
+					else if (one.pressed || three.pressed) wrongAnswer = true;
+				} else if(one.pressed || two.pressed || three.pressed) haventmoved = true;
+				if (haventmoved) bottomText = "Look. I get that you're lazy. Me too. but please.";
+				else if (wrongAnswer) bottomText = "HUHHHH??? No way that's right...";
 				else bottomText = "Well? [1] 5 [2] 7 [3] 9";
 			} else {
 				bottomText = "Tell me how many brown mushrooms are out there... [F]"; // 7
@@ -396,10 +417,12 @@ void PlayMode::update(float elapsed) {
 		} else if (duckCollide) {
 			if(cont.pressed) trigger = true;
 			if(trigger){
-				if(one.pressed && !two.pressed && !three.pressed) danswer = true;
-				else if (two.pressed || three.pressed) wrongAnswer = true;
-			
-				if (wrongAnswer) bottomText = "That doesn't sound right...";
+				if(swantalk){
+					if(one.pressed && !two.pressed && !three.pressed) danswer = true;
+					else if (two.pressed || three.pressed) wrongAnswer = true;
+				} else if(one.pressed || two.pressed || three.pressed) haventmoved = true;
+				if (haventmoved) bottomText = "You didn't even look around...";
+				else if (wrongAnswer) bottomText = "That doesn't sound right...";
 				else bottomText = "Well? [1] 9 [2] 4 [3] 8";
 			} else {
 				bottomText = "Tell me how many red mushrooms are out there... [F]"; // 9
@@ -408,6 +431,7 @@ void PlayMode::update(float elapsed) {
 		} else {
 			trigger = false;
 			wrongAnswer = false;
+			haventmoved = false;
 			bottomText = "Mouse motion looks; WASD moves; escape ungrabs mouse";
 		}
 	}

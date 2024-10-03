@@ -51,11 +51,11 @@ struct PlayMode : Mode {
 
 	Scene::Transform *raccoon = nullptr;
 	Scene::Transform *duck = nullptr;
+	Scene::Transform *swan = nullptr;
 	glm::quat raccoon_rotation;
 	glm::quat duck_rotation;
 	float wobble = 0.0f;
 	
-
 	std::shared_ptr< Font > TextFont;
 	std::vector<Text> texts;
 
@@ -73,8 +73,11 @@ struct PlayMode : Mode {
 	bool ranswer = false;
 	bool wrongAnswer = false;
 	bool danswer = false;
+	bool swantalk = false;
+	bool haventmoved = false;
 
 	glm::vec2 obj_bbox;
+	glm::vec2 swan_bbox;
 
 	//player info:
 	struct Player {
